@@ -464,6 +464,7 @@ typename List<T>::ListIter List<T>::create_tail()
  * --------------------------------------------------------------- */
 
 // Constructor privado, utilizado por los métodos fábrica create_head y create_tail
+
 template <typename T>
 List<T>::ListIter::ListIter(List *list, List::Node *start)
 {
@@ -474,58 +475,131 @@ List<T>::ListIter::ListIter(List *list, List::Node *start)
 template <typename T>
 bool List<T>::ListIter::forward()
 {
-    // TODO: avanzar una posición si se puede.
+    if (curr == nullptr) { // lista vacia
+        return false;
+    }
+    if (curr->next != nullptr) { //si el siguiente no es null, me muevo
+        curr = curr->next;
+        return true;
+    }
     return false;
 }
 
 template <typename T>
 bool List<T>::ListIter::backward()
 {
-    // TODO: retroceder una posición si se puede.
+    if (curr == nullptr) {
+        return false;
+    }
+    if (curr->prev != nullptr) {
+        curr = (this->curr)->prev;
+        return true;
+    }
     return false;
 }
 
 template <typename T>
 const T &List<T>::ListIter::peek_current() const
 {
-    // benja: elimina estos dos de abajo, los puse para probar lo mío
-    static T dummy_value; // <-
-    return dummy_value;   // <-
+   return curr -> value;
 }
 
 template <typename T>
 bool List<T>::ListIter::at_last() const
 {
-    // TODO: devolver si el iterador está en el último elemento.
-    return false;
+    return (curr == (list->tail));
 }
 
 template <typename T>
 bool List<T>::ListIter::at_first() const
 {
-    // TODO: devolver si el iterador está en el primer elemento.
-    return false;
+    return (curr == (list->head));
 }
 
 template <typename T>
 bool List<T>::ListIter::insert_after(const T &value)
 {
-    // TODO: insertar un valor detrás del actual con new.
-    return false;
+    if (curr == nullptr) { //lista vacía
+        list->insert_head(value); //inserto al principio (al final sería lo mismo)
+        curr = list->head; //mando el puntero al principio
+        return true;
+    }
+
+    
+
+    Node *nuevo = new Node(value); // si no es vacía, creo el nodo
+    nuevo->prev = curr;
+    nuevo->next = curr->next; 
+    
+    if (curr->next != nullptr) { // si curr no es el ultimo:
+    curr->next->prev = nuevo; //hago que el siguiente a curr tenga como previo el nuevo (meto nuevo entre curr y su next)
+    } else {
+        list->tail = nuevo; //si curr es el ultimo, pongo al nuevo como tail
+    }
+
+    curr->next = nuevo;
+    list -> size++;
+    
+    return true;
 }
 
 template <typename T>
 bool List<T>::ListIter::insert_before(const T &value)
 {
-    // TODO: insertar un valor delante del actual con new.
-    return false;
+    if (curr == nullptr) { //lista vacía
+        list->insert_head(value); //inserto al principio (al final sería lo mismo)
+        curr = list->head; 
+        return true;
+    }
+
+
+    Node *nuevo = new Node(value); // si no es vacía, creo el nodo
+    nuevo->next = curr;
+    nuevo->prev = curr->prev; 
+    
+    if (curr->prev != nullptr) { // si curr no es el primero:
+        curr->prev->next = nuevo; //hago que el anterior a curr tenga como siguiente el nuevo (meto nuevo entre curr y su prev)
+    } else {
+        list->head = nuevo; //si curr es el primero, pongo al nuevo como head
+    }
+
+    curr->prev = nuevo;
+    list -> size++;
+    
+    return true;
 }
+
 
 template <typename T>
 T List<T>::ListIter::remove()
 {
-    // benja: elimina esto de abajo, los puse para probar lo mío
-    return T(); // <-
+   T valor = curr->value; // guardo los valores de curr antes del delete
+   Node *siguiente = curr->next;
+   Node *anterior = curr->prev;
+
+    if (anterior != nullptr) { //si no estoy al principio
+        anterior->next = siguiente; //conecto los vecinos de curr
+    } else {
+        list->head = siguiente;
+    }
+
+    if (siguiente != nullptr) { //si no estoy al final
+        siguiente->prev = anterior; //ida y vuelta porque es doblemente enlazada
+    } else {
+        list->tail = anterior;
+    }
+
+    delete curr; 
+
+    if (siguiente != nullptr) {
+        this->curr = siguiente; // hago que curr se pare de nuevo
+    } else {
+        this->curr = anterior;
+    }
+
+    list -> size--;
+
+    return valor;
 }
 
 #endif // TP2_H
